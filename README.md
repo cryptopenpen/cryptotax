@@ -12,12 +12,13 @@ french tax declaration generator for various exchange in order to fill 2086 repo
 
 example of running:
 * run compose file for mariadb service (tune file if needed, beware of 3307 port)
+* create virtualenv (dev is made with python 3.6)  
 * install requirements (pip)  
 * run main script
  
 `python src/main.py --inf etoro_account_statement.xlsx --outf report.csv --cc --begin 2020-01-01-00-00-00 --end 2020-12-31-23-59-59`
 
-If problems, try locate failing step in main.py and tune directly in database
+If problems, try locate failing step in main.py and tune directly in database (i'll add some check/auto-repair/fix features later...)
 
 ### CURRENT DEV (branch: develop):
 
