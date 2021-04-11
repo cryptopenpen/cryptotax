@@ -1,0 +1,5 @@
+pymysql==1.0.2
+openpyxl==3.0.7
+pycoingecko==1.4.1
+tenacity==7.0.0
+sqlalchemy==1.4.7
