@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from tenacity import retry, wait_fixed
 
-from sql_request import BOOT_DB_REQUEST
+from database import BOOT_DB_REQUEST
 
 logger = logging.getLogger("main")
 

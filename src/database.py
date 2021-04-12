@@ -1,5 +1,5 @@
 BOOT_DB_REQUEST = {
-    "mysql+pymysql": ["""
+    "mysql": ["""
 CREATE TABLE IF NOT EXISTS `asset_price_cache` (
   `key` varchar(256) NOT NULL,
   `price` float NOT NULL,
@@ -38,6 +38,7 @@ CREATE OR REPLACE TABLE `purchase_operation_history` (
   `amount_asset` float NOT NULL,
   `amount_price` float NOT NULL,
   `current_asset_price` float NOT NULL,
+  `exchange` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
@@ -48,6 +49,7 @@ CREATE OR REPLACE TABLE `sale_operation_history` (
   `amount_asset` float NOT NULL,
   `amount_price` float NOT NULL,
   `current_asset_price` float NOT NULL,
+  `exchange` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""

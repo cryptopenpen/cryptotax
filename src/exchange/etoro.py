@@ -37,22 +37,22 @@ FIELD_NAME_ACTION = 1
 logger = logging.getLogger("main")
 
 
-def read_account_statement(filepath):
-    wb = load_workbook(filename = filepath)
-
-    transactions_report = wb["Transactions Report"]
-    closed_positions = wb["Closed Positions"]
-
-    return transactions_report, closed_positions
-
-
 class EtoroTaxExtractor:
 
     PLATFORM = "ETORO"
 
-    def __init__(self, all_position_operations: List, closed_positions: List, connection: Connection):
+    def __init__(self, connection: Connection):
         self.connection = connection
-        self.all_position_operations = all_position_operations
+        self.all_position_operations = None
+        self.closed_positions = None
+
+    def load_account_statement(self, filepath):
+        wb = load_workbook(filename = filepath)
+
+        transactions_report = wb["Transactions Report"]
+        closed_positions = wb["Closed Positions"]
+
+        self.all_position_operations = transactions_report
         self.closed_positions = closed_positions
 
     def clean_all_history(self):
@@ -61,10 +61,10 @@ class EtoroTaxExtractor:
             conn.execute(sql, [])
             sql = "DELETE FROM `etoro_close_positions`;"
             conn.execute(sql, [])
-            sql = "DELETE FROM `purchase_operation_history`;"
-            conn.execute(sql, [])
-            sql = "DELETE FROM `sale_operation_history`;"
-            conn.execute(sql, [])
+            sql = "DELETE FROM `purchase_operation_history` WHERE EXCHANGE = %s;"
+            conn.execute(sql, [self.PLATFORM])
+            sql = "DELETE FROM `sale_operation_history` WHERE EXCHANGE = %s;"
+            conn.execute(sql, [self.PLATFORM])
 
     def extract_purchase_history(self):
         with self.connection.begin() as conn:
@@ -188,23 +188,25 @@ class EtoroTaxExtractor:
 
     def save_purchase_operation(self, purchase_operation):
         with self.connection.begin() as conn:
-            sql = "INSERT INTO purchase_operation_history (purchase_datetime, asset, amount_asset, amount_price, current_asset_price)" \
-                        "                          VALUES (%s,                %s,    %s,           %s,           %s                 )"
+            sql = "INSERT INTO purchase_operation_history (purchase_datetime, asset, amount_asset, amount_price, current_asset_price, exchange)" \
+                        "                          VALUES (%s,                %s,    %s,           %s,           %s                 , %s      )"
             conn.execute(sql, [purchase_operation["purchase_datetime"],
                                purchase_operation["asset"],
                                purchase_operation["amount_asset"],
                                purchase_operation["amount_price"],
-                               purchase_operation["current_asset_price"]])
+                               purchase_operation["current_asset_price"],
+                               self.PLATFORM])
 
     def save_sale_operation(self, sale_operation):
         with self.connection.begin() as conn:
-            sql = "INSERT INTO sale_operation_history (sale_datetime, asset, amount_asset, amount_price, current_asset_price)" \
-                  "                            VALUES (%s,            %s,    %s,           %s,           %s                 )"
+            sql = "INSERT INTO sale_operation_history (sale_datetime, asset, amount_asset, amount_price, current_asset_price, exchange)" \
+                  "                            VALUES (%s,            %s,    %s,           %s,           %s                 , %s      )"
             conn.execute(sql, [sale_operation["sale_datetime"],
                                sale_operation["asset"],
                                sale_operation["amount_asset"],
                                sale_operation["amount_price"],
-                               sale_operation["current_asset_price"]])
+                               sale_operation["current_asset_price"],
+                               self.PLATFORM])
 
     def generate_purchase_operation_history(self):
         all_open_positions = self.get_all_open_positions()
