@@ -6,6 +6,8 @@ from openpyxl import load_workbook
 from pycoingecko import CoinGeckoAPI
 from sqlalchemy.engine import Connection
 
+from utils import query_coingecko_asset_price
+
 CRYPTO_PAIR = {
     "BITCOIN": "BTC/USD",
     "ETHEREUM": "ETH/USD",
@@ -178,7 +180,7 @@ class EtoroTaxExtractor:
                 position["current_asset_price"] = close_position["open_asset_price"]
             else:
                 logger.warning("Unknown price {}....".format(position))
-                current_asset_price = get_asset_price(position["asset"], position["open_datetime"].strftime("%d-%m-%Y %H:%M:%S"))
+                current_asset_price = self.get_asset_price(position["asset"], position["open_datetime"])
                 position["amount_asset"] = position["amount_price"]/current_asset_price
                 position["current_asset_price"] = current_asset_price
 
@@ -253,14 +255,9 @@ class EtoroTaxExtractor:
 
                 self.save_sale_operation(sale_operation)
 
+    def get_asset_price(self, asset: str, timestamp: datetime):
+        if asset.upper() in GECKO_CONVERT:
+            asset = GECKO_CONVERT[asset.upper()].lower()
 
-def get_asset_price(asset: str, timestamp: str):
-    cg = CoinGeckoAPI()
+        return query_coingecko_asset_price(asset, timestamp)
 
-    if asset.upper() in GECKO_CONVERT:
-        asset = GECKO_CONVERT[asset.upper()].lower()
-
-    logger.info("Get price for {} at {}".format(asset, timestamp))
-    data = cg.get_coin_history_by_id(asset, timestamp, localization='false')
-    price = data["market_data"]["current_price"]["usd"]
-    return price

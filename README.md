@@ -22,19 +22,29 @@ If problems, try locate failing step in main.py and tune directly in database (i
 
 ### CURRENT DEV (branch: develop):
 
+    * traduire ce readme en français parce que c'est con en anglais en fait....
     * test more with various inputs
+    * little refactoring on disposal calculus
     * add real config file
     * switch coingecko to binance for price guessing when binance active
     * add command step process support
     * finalize binance implementation
-    * add support for sqlite3 (get ride of docker mariadb)
-    * support mixing exchange 
+    * support mixing exchange declaration
+    * add "instant 0" / "balance 0" validation (avoid selling asset created ex-nihilo....)
+    * add replay/idempotency support
+    * add correct rounding
 
+### CURRENT LIMITATION
+
+    * no support for interexchange/wallet movement (ex: buy on coinbase, send to binance then sell)  
 
 ### NEXT: 
 
     * add coinbase implementation
     * add cryptoco implementation
+    * add sqlite support (no need for external db with compose)
+        * i don't like it because it makes debug/profiling harder for me
+        * but it is easier to handle for not-dev people...
 
 
 ### Exchange inforamtions:
