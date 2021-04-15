@@ -1,0 +1,7 @@
+database:
+  database_dialect: "mysql"
+  database_uri: "mysql+pymysql://root:1234cryptotax1234@localhost:3307/tax_reporter?charset=utf8mb4"
+
+binance:
+  key: "your_api_key"
+  secret: "your_api_secret"

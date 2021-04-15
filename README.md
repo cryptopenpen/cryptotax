@@ -1,21 +1,26 @@
 # cryptotax
 
-## WORK IN PROGRESS, need test, test, test and re-test
+## WARNING: WORK IN PROGRESS, need test, test, test and re-test
+## WARNING: Actuellement, tout est en monnaie native ( genre USD si vous avez parametré USD par defaut)
 
 Generateur de cession d'actif numerique pour la declaration d'impots sur le revenue français (CERFA 2086) sur différents exchange
 
+note: les calcul intermediaire sont fait en USD mais l'output est en euro
+
 Exchange supporté:
-* Etoro (OK)
-* Binance (WIP)
+* Etoro (OK et a priori terminé, juste besoin de plus de gens qui test)
+* Binance (WIP, probleme pour detecter tous les flux in/out, besoin de plus de jeux de donnée/test)
 * Coinbase (TODO)
 * Crypto.com (TODO)
 
 arguments:
+* `--config {yaml file}` charge le fichier de configuration (voir config.sample.yaml) 
 * `--boot`                (re)créé la structure de BDD necessaire
-* `--load {ETORO,BINANCE,COINBASE,CRYPTOCO}` charge le relevé de compte de l'exchange
+* `--exchange {ETORO,BINANCE,COINBASE,CRYPTOCO}` specifie l'exchange courant
+* `--load`  charge le relevé de compte de l'exchange
 * `-i INF, --inf INF`     fichier de relevé de compte
 * `-c, --cc`              essaie de regrouper les ventes de meme actifs dans la meme minute
-* `--clean {ETORO,BINANCE,COINBASE,CRYPTOCO}` supprime les donnée importé pour l'exchange
+* `--clean` supprime les donnée importé pour l'exchange
 * `--generate` genere la liste des cession pour le CERFA 2086 ainsi que la plus/moins value global
 * `-o OUTF, --outf OUTF`  fichier de sortie
 * `-b BEGIN, --begin BEGIN` date de debut de l'année d'imposition (format 2020-01-01-00-00-00)
@@ -26,17 +31,17 @@ Note sur le relevé de compte
 Pour le moment, les transfert entrant sont considéré comme des achats et les transfert sortant sont ignoré en ce qui concerne la vente
 
 * Etoro: relevé de compte depuis https://accountstat.etoro.com/ (important, il faut TOUT extraire, pas que l'année imposable)
-* Binance: historique des trade depuis https://www.binance.com/fr/my/orders/exchange/usertrade (important, il faut TOUT extraire, pas que l'année imposable)
-*
+* Binance: relevé complet depuis https://www.binance.com/fr/my/wallet/history/deposit-crypto (important, il faut TOUT extraire, pas que l'année imposable)
+
 
 
 Exemple de fontionnement
 * créer un virtualenv (python 3.6+) et installer les requirements
 * lancer le docker compose fourni (attention au port, modifier le config.py en consequence)
-* `python src/main.py --boot`
-* `python src/main.py --clean ETORO`
-* `python src/main.py --load ETORO --cc --inf eToroAccountStatement_01-01-2019_12-04-2021.xlsx`
-* `python src/main.py --generate --outf decla.csv --begin 2020-01-01-00-00-00 --end 2020-12-31-23-59-59`
+* `python src/main.py --config config.yaml --boot`
+* `python src/main.py --config config.yaml --exchange ETORO --clean`
+* `python src/main.py --config config.yaml --exchange ETORO --load --cc --inf eToroAccountStatement_01-01-2019_12-04-2021.xlsx`
+* `python src/main.py --config config.yaml --generate --outf decla.csv --begin 2020-01-01-00-00-00 --end 2020-12-31-23-59-59`
 
 
 ### CURRENT DEV (branch: develop):
@@ -48,7 +53,6 @@ Exemple de fontionnement
     * support mixing exchange declaration
     * add "instant 0" / "balance 0" validation (avoid selling asset created ex-nihilo....)
     * add replay/idempotency support
-    * add correct rounding
 
 ### CURRENT LIMITATION
 

@@ -1,51 +1,25 @@
-import logging
-from datetime import datetime
-from typing import List
-
-from openpyxl import load_workbook
 from sqlalchemy.engine import Connection
 
-from utils import CurrencyExtractor
 
-CRYPTO_PAIR = {
-    "BITCOIN": "BTC/USD",
-    "ETHEREUM": "ETH/USD",
-    "LITECOIN": "LTC/USD",
-    "TRON": "TRX/USD",
-    "CARDANO": "ADA/USD",
-    "NEO": "NEO/USD",
-    "STELLAR": "XLM/USD",
-    "TEZOS": "XTZ/USD",
-    "MIOTA": "IOTA/USD",
-    "RIPPLE": "XRP/USD",
-    "DASH": "DASH/USD",
-    "BNB": "BNB/USD",
-}
+class BinanceTaxExtractor:
 
-PAIR_CRYPTO = {v: k for k,v in CRYPTO_PAIR.items()}
+    PLATFORM = "BINANCE"
 
-FIELD_NAME_TYPE = 2
-FIELD_TYPE_OPEN_POSITION = "Open Position"
-
-FIELD_NAME_DETAILS = 3
-
-FIELD_NAME_ACTION = 1
-
-logger = logging.getLogger("main")
-
-
-class EtoroTaxExtractor:
-
-    PLATFORM = "ETORO"
-
-    def __init__(self, connection: Connection, currency_extractor: CurrencyExtractor):
+    def __init__(self, connection: Connection):
         self.connection = connection
-        self.currency_extractor = currency_extractor
-        self.all_position_operations = None
-        self.closed_positions = None
 
-    def load_account_statement(self, filepath):
-        logger.info("Load etoro account statement")
+    def clean_all_history(self):
+        with self.connection.begin() as conn:
+            sql = "DELETE FROM `binance_open_positions`;"
+            conn.execute(sql, [])
+            sql = "DELETE FROM `binance_close_positions`;"
+            conn.execute(sql, [])
+            sql = "DELETE FROM `purchase_operation_history` WHERE EXCHANGE = %s;"
+            conn.execute(sql, [self.PLATFORM])
+            sql = "DELETE FROM `sale_operation_history` WHERE EXCHANGE = %s;"
+            conn.execute(sql, [self.PLATFORM])
+
+    """def load_account_statement(self, filepath):
         wb = load_workbook(filename = filepath)
 
         transactions_report = wb["Transactions Report"]
@@ -53,21 +27,8 @@ class EtoroTaxExtractor:
 
         self.all_position_operations = transactions_report
         self.closed_positions = closed_positions
-
-    def clean_all_history(self):
-        logger.info("Extract all etoro history")
-        with self.connection.begin() as conn:
-            sql = "DELETE FROM `etoro_open_positions`;"
-            conn.execute(sql, [])
-            sql = "DELETE FROM `etoro_close_positions`;"
-            conn.execute(sql, [])
-            sql = "DELETE FROM `purchase_operation_history` WHERE EXCHANGE = %s;"
-            conn.execute(sql, [self.PLATFORM])
-            sql = "DELETE FROM `sale_operation_history` WHERE EXCHANGE = %s;"
-            conn.execute(sql, [self.PLATFORM])
-
+    
     def extract_purchase_history(self):
-        logger.info("Extract etoro purchase history")
         with self.connection.begin() as conn:
 
             for row in self.all_position_operations.rows:
@@ -96,7 +57,6 @@ class EtoroTaxExtractor:
                                    position["amount_price"]])
 
     def extract_sale_history(self):
-        logger.info("Extract etoro sale history")
         supported_action = ["BUY "+asset for asset in CRYPTO_PAIR]
 
         with self.connection.begin() as conn:
@@ -170,7 +130,6 @@ class EtoroTaxExtractor:
                                open_position["position_id"]])
 
     def consolidate_history(self):
-        logger.info("Consolidate etoro history")
         all_open_positions = self.get_all_open_positions()
 
         for open_position in all_open_positions:
@@ -183,7 +142,7 @@ class EtoroTaxExtractor:
                 position["current_asset_price"] = close_position["open_asset_price"]
             else:
                 logger.warning("Unknown price {}....".format(position))
-                current_asset_price = self.currency_extractor.get_asset_price(position["asset"], position["open_datetime"])
+                current_asset_price = self.get_asset_price(position["asset"], position["open_datetime"])
                 position["amount_asset"] = position["amount_price"]/current_asset_price
                 position["current_asset_price"] = current_asset_price
 
@@ -191,51 +150,42 @@ class EtoroTaxExtractor:
 
     def save_purchase_operation(self, purchase_operation):
         with self.connection.begin() as conn:
-            sql = "INSERT INTO purchase_operation_history (purchase_datetime, asset, amount_asset, amount_price_usd, amount_price_euro, current_asset_price_usd, current_asset_price_euro, exchange)" \
-                        "                          VALUES (%s,                %s,    %s,           %s,               %s,                %s,                      %s,                       %s      )"
+            sql = "INSERT INTO purchase_operation_history (purchase_datetime, asset, amount_asset, amount_price, current_asset_price, exchange)" \
+                  "                          VALUES (%s,                %s,    %s,           %s,           %s                 , %s      )"
             conn.execute(sql, [purchase_operation["purchase_datetime"],
                                purchase_operation["asset"],
                                purchase_operation["amount_asset"],
-                               purchase_operation["amount_price_usd"],
-                               purchase_operation["amount_price_euro"],
-                               purchase_operation["current_asset_price_usd"],
-                               purchase_operation["current_asset_price_euro"],
+                               purchase_operation["amount_price"],
+                               purchase_operation["current_asset_price"],
                                self.PLATFORM])
 
     def save_sale_operation(self, sale_operation):
         with self.connection.begin() as conn:
-            sql = "INSERT INTO sale_operation_history (sale_datetime, asset, amount_asset, amount_price_usd, amount_price_euro, current_asset_price_usd, current_asset_price_euro, exchange)" \
-                  "                            VALUES (%s,            %s,    %s,           %s,               %s,                %s,                      %s,                       %s      )"
+            sql = "INSERT INTO sale_operation_history (sale_datetime, asset, amount_asset, amount_price, current_asset_price, exchange)" \
+                  "                            VALUES (%s,            %s,    %s,           %s,           %s                 , %s      )"
             conn.execute(sql, [sale_operation["sale_datetime"],
                                sale_operation["asset"],
                                sale_operation["amount_asset"],
-                               sale_operation["amount_price_usd"],
-                               sale_operation["amount_price_euro"],
-                               sale_operation["current_asset_price_usd"],
-                               sale_operation["current_asset_price_euro"],
+                               sale_operation["amount_price"],
+                               sale_operation["current_asset_price"],
                                self.PLATFORM])
 
     def generate_purchase_operation_history(self):
-        logger.info("Generate etoro purchase operation history")
         all_open_positions = self.get_all_open_positions()
 
         for open_position in all_open_positions:
-            euro_price = self.currency_extractor.get_asset_price("euro", open_position["open_datetime"])
             purchase_operation = {
                 "purchase_datetime": open_position["open_datetime"],
                 "asset": open_position["asset"],
                 "amount_asset": open_position["amount_asset"],
-                "amount_price_usd": open_position["amount_price"],
-                "amount_price_euro": open_position["amount_price"]*euro_price,
-                "current_asset_price_usd": open_position["current_asset_price"],
-                "current_asset_price_euro": open_position["current_asset_price"]*euro_price,
+                "amount_price": open_position["amount_price"],
+                "current_asset_price": open_position["current_asset_price"],
             }
 
             self.save_purchase_operation(purchase_operation)
 
 
     def generate_sale_operation_history(self, try_compact: bool = False):
-        logger.info("Generate etoro sale operation history (compact is {})".format(try_compact))
         all_close_positions = self.get_all_close_positions()
 
         if try_compact:
@@ -245,33 +195,33 @@ class EtoroTaxExtractor:
 
                 if key in compacted_sale_op.keys():
                     compacted_sale_op[key]["amount_asset"] += close_op["amount_asset"]
-                    compacted_sale_op[key]["amount_price_usd"] += close_op["amount_price"] + close_op["profit_price"]
+                    compacted_sale_op[key]["amount_price"] += close_op["amount_price"] + close_op["profit_price"]
                 else:
                     compacted_sale_op[key] = {
                         "sale_datetime": close_op["close_datetime"],
                         "asset": close_op["asset"],
                         "amount_asset": close_op["amount_asset"],
-                        "amount_price_usd": close_op["amount_price"] + close_op["profit_price"],
-                        "current_asset_price_usd": close_op["current_asset_price"],
+                        "amount_price": close_op["amount_price"] + close_op["profit_price"],
+                        "current_asset_price": close_op["current_asset_price"],
                     }
 
             for op in compacted_sale_op.values():
-                euro_price = self.currency_extractor.get_asset_price("euro", op["sale_datetime"])
-                op["amount_price_euro"] = op["amount_price_usd"]*euro_price
-                op["current_asset_price_euro"] = op["current_asset_price_usd"]*euro_price
                 self.save_sale_operation(op)
         else:
             for close_position in all_close_positions:
-                euro_price = self.currency_extractor.get_asset_price("euro", close_position["sale_datetime"])
-
                 sale_operation = {
                     "sale_datetime": close_position["close_datetime"],
                     "asset": close_position["asset"],
                     "amount_asset": close_position["amount_asset"],
-                    "amount_price_usd": close_position["amount_price"] + close_position["profit_price"],
-                    "amount_price_euro": (close_position["amount_price"] + close_position["profit_price"])*euro_price,
-                    "current_asset_price_usd": close_position["current_asset_price"],
-                    "current_asset_price_euro": close_position["current_asset_price"]*euro_price,
+                    "amount_price": close_position["amount_price"] + close_position["profit_price"],
+                    "current_asset_price": close_position["current_asset_price"],
                 }
 
                 self.save_sale_operation(sale_operation)
+
+    def get_asset_price(self, asset: str, timestamp: datetime):
+        if asset.upper() in GECKO_CONVERT:
+            asset = GECKO_CONVERT[asset.upper()].lower()
+
+        return query_coingecko_asset_price(asset, timestamp)"""
+

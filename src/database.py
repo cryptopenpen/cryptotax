@@ -36,8 +36,10 @@ CREATE OR REPLACE TABLE `purchase_operation_history` (
   `purchase_datetime` datetime NOT NULL,
   `asset` varchar(256) NOT NULL,
   `amount_asset` float NOT NULL,
-  `amount_price` float NOT NULL,
-  `current_asset_price` float NOT NULL,
+  `amount_price_usd` float NOT NULL,
+  `amount_price_euro` float NOT NULL,
+  `current_asset_price_usd` float NOT NULL,
+  `current_asset_price_euro` float NOT NULL,
   `exchange` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -47,8 +49,10 @@ CREATE OR REPLACE TABLE `sale_operation_history` (
   `sale_datetime` datetime NOT NULL,
   `asset` varchar(256) NOT NULL,
   `amount_asset` float NOT NULL,
-  `amount_price` float NOT NULL,
-  `current_asset_price` float NOT NULL,
+  `amount_price_usd` float NOT NULL,
+  `amount_price_euro` float NOT NULL,
+  `current_asset_price_usd` float NOT NULL,
+  `current_asset_price_euro` float NOT NULL,
   `exchange` varchar(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

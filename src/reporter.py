@@ -1,13 +1,12 @@
 import csv
 import logging
 from datetime import datetime
+from decimal import Decimal
 from typing import List
 
-from pycoingecko import CoinGeckoAPI
 from sqlalchemy.engine import Connection
-from tenacity import retry, wait_fixed
 
-from utils import query_coingecko_asset_price
+from utils import CurrencyExtractor
 
 logger = logging.getLogger("main")
 
@@ -19,6 +18,12 @@ header = ["disposal_datetime",
           "current_balanced_purchase",
           "profit_and_loss"]
 white_row = [""*7]
+
+
+# replace shitty version
+def real_round(value: Decimal, digit: int = 2):
+    return Decimal(str(round(value, digit)))
+
 
 def dump_to_csv(tax_report, output):
     with open(output, 'w', newline='') as csvfile:
@@ -46,8 +51,9 @@ def dump_to_csv(tax_report, output):
 
 
 class TaxReporter:
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection, currency_extractor: CurrencyExtractor):
         self.connection = connection
+        self.currency_extractor = currency_extractor
 
     def get_sale_operations(self, begin_date: datetime, end_date: datetime):
         with self.connection.connect() as conn:
@@ -99,45 +105,26 @@ class TaxReporter:
 
         return owned_asset
 
-    def get_asset_price(self, asset: str, timestamp: datetime):
-        key = "{}-{}".format(timestamp.strftime("%Y-%m-%d-%H-%M"), asset)
-
-        with self.connection.begin() as conn:
-            sql = "SELECT price FROM asset_price_cache WHERE `key` = %s"
-            args = [key]
-
-            result = conn.execute(sql, args).mappings().fetchone()
-
-            if result:
-                return result["price"]
-            else:
-                price = query_coingecko_asset_price(asset, timestamp)
-                sql = "INSERT INTO asset_price_cache (`key`, price)" \
-                      "                       VALUES (%s,  %s   )"
-                conn.execute(sql, [key, price])
-
-                return price
-
-
     def get_portfolio_value(self, timestamp: datetime):
         assets = self.get_owned_assets(timestamp)
 
         portfolio_value = 0
 
         for asset, amount in assets.items():
-            price = self.get_asset_price(asset, timestamp)
-            portfolio_value += price * amount
+            price = self.currency_extractor.get_asset_price(asset, timestamp)
+            euro_price = self.currency_extractor.get_asset_price("euro", timestamp)
+            portfolio_value += price * amount * euro_price
 
         return portfolio_value
 
     def get_all_purchase_value(self, timestamp: datetime):
         with self.connection.connect() as conn:
-            sql = "SELECT SUM(amount_price) FROM purchase_operation_history WHERE purchase_datetime <= %s"
+            sql = "SELECT SUM(amount_price_euro) FROM purchase_operation_history WHERE purchase_datetime <= %s"
             args = [timestamp]
 
             result = conn.execute(sql, args).mappings().fetchone()
 
-            return result["SUM(amount_price)"]
+            return result["SUM(amount_price_euro)"]
 
     def generate_tax_disposal_history(self, begin_date: datetime, end_date: datetime, compacted: bool = False):
         sale_operations = self.get_sale_operations(begin_date, end_date)
@@ -152,23 +139,23 @@ class TaxReporter:
             current_portfolio_value = self.get_portfolio_value(sale_datetime)
 
             disposal["disposal_datetime"] = sale_datetime
-            disposal["current_portfolio_value"] = current_portfolio_value
-            disposal["disposal_price"] = sale["amount_price"]
+            disposal["current_portfolio_value"] = real_round(Decimal(current_portfolio_value))
+            disposal["disposal_price"] = real_round(Decimal(sale["amount_price_euro"]))
 
             all_cash_in = self.get_all_purchase_value(sale_datetime)
-            disposal["current_total_purchase"] = all_cash_in
+            disposal["current_total_purchase"] = real_round(Decimal(all_cash_in))
 
             if all_disposals:
                 previous_disposal = all_disposals[-1]
                 current_previous_disposed_purchase = previous_disposal["current_balanced_purchase"] * previous_disposal["disposal_price"] / previous_disposal["current_portfolio_value"]
-                disposal["current_previous_disposed_purchase"] = current_previous_disposed_purchase + previous_disposal["current_previous_disposed_purchase"]
+                disposal["current_previous_disposed_purchase"] = real_round(Decimal(current_previous_disposed_purchase + previous_disposal["current_previous_disposed_purchase"]))
             else:
                 disposal["current_previous_disposed_purchase"] = 0
 
-            disposal["current_balanced_purchase"] = disposal["current_total_purchase"] - disposal["current_previous_disposed_purchase"]
-            disposal["profit_and_loss"] = disposal["disposal_price"] - (disposal["current_balanced_purchase"] * disposal["disposal_price"] / disposal["current_portfolio_value"])
+            disposal["current_balanced_purchase"] = real_round(Decimal(disposal["current_total_purchase"] - disposal["current_previous_disposed_purchase"]))
+            disposal["profit_and_loss"] = real_round(Decimal(disposal["disposal_price"] - (disposal["current_balanced_purchase"] * disposal["disposal_price"] / disposal["current_portfolio_value"])))
 
-            global_pnl += disposal["profit_and_loss"]
+            global_pnl += real_round(Decimal(disposal["profit_and_loss"]))
 
             all_disposals.append(disposal)
 

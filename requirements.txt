@@ -3,3 +3,4 @@ openpyxl==3.0.7
 pycoingecko==1.4.1
 tenacity==7.0.0
 sqlalchemy==1.4.7
+pyyaml==5.4.1
