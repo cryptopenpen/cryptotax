@@ -67,7 +67,7 @@ Exemple de fontionnement
 
 
 ### Particularité:
-* Concernant, l'exchange étant mixte crypto/action, seul les crypto sont importés  
+* Concernant Etoro, l'exchange étant mixte crypto/action, seul les crypto sont importés  
 
 Vous voulez m'aider/remercier/encourager ou vous savez tout simplement pas quoi faire de vos crypto ?
 
