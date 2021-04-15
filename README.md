@@ -1,7 +1,6 @@
 # cryptotax
 
 ## WARNING: WORK IN PROGRESS, need test, test, test and re-test
-## WARNING: Actuellement, tout est en monnaie native ( genre USD si vous avez parametré USD par defaut)
 
 Generateur de cession d'actif numerique pour la declaration d'impots sur le revenue français (CERFA 2086) sur différents exchange
 
