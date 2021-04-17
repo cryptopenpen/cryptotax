@@ -50,7 +50,7 @@ arguments:
 
 Exemple de fontionnement
 * créer un virtualenv (python 3.6+) et installer les requirements
-* lancer le docker compose fourni (attention au port, modifier le config.py en consequence)
+* lancer le docker compose fourni (attention au port, modifier le config.yaml en consequence)
 * `python src/main.py --config config.yaml --boot`
 * `python src/main.py --config config.yaml --exchange ETORO --clean`
 * `python src/main.py --config config.yaml --exchange ETORO --load --cc --inf eToroAccountStatement_01-01-2019_12-04-2021.xlsx`
