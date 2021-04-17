@@ -195,7 +195,7 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
         all_open_positions = self.get_all_open_positions()
 
         for open_position in all_open_positions:
-            euro_price = self.currency_extractor.get_asset_price("EUR", open_position["open_datetime"])
+            euro_price = self.currency_extractor.get_asset_price("euro", open_position["open_datetime"])
             purchase_operation = {
                 "purchase_datetime": open_position["open_datetime"],
                 "asset": open_position["asset"],
@@ -230,13 +230,13 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
                     }
 
             for op in compacted_sale_op.values():
-                euro_price = self.currency_extractor.get_asset_price("EUR", op["sale_datetime"])
+                euro_price = self.currency_extractor.get_asset_price("euro", op["sale_datetime"])
                 op["amount_price_euro"] = op["amount_price_usd"]*euro_price
                 op["current_asset_price_euro"] = op["current_asset_price_usd"]*euro_price
                 self.save_sale_operation(op)
         else:
             for close_position in all_close_positions:
-                euro_price = self.currency_extractor.get_asset_price("EUR", close_position["close_datetime"])
+                euro_price = self.currency_extractor.get_asset_price("euro", close_position["close_datetime"])
 
                 sale_operation = {
                     "sale_datetime": close_position["close_datetime"],
@@ -299,7 +299,7 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
 
         for asset, amount in assets.items():
             price = self.currency_extractor.get_asset_price(asset, timestamp)
-            euro_price = self.currency_extractor.get_asset_price("EUR", timestamp)
+            euro_price = self.currency_extractor.get_asset_price("euro", timestamp)
             portfolio_value += price * amount * euro_price
 
         return portfolio_value

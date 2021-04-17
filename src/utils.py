@@ -11,10 +11,9 @@ from database import BOOT_DB_REQUEST
 
 logger = logging.getLogger("main")
 
-ASSET_RENAME = {"BTC": "bitcoin",
-                "XLM": "stellar",
-                "ADA": "cardano",
-                "EUR": "euro"}
+GECKO_CONVERT = {"BNB": "binancecoin",
+                 "EUR": "euro"}
+
 
 class CurrencyExtractor:
 
@@ -22,8 +21,11 @@ class CurrencyExtractor:
         self.connection = connection
         self.binance_client = binance_client
 
-    def get_asset_price(self, asset: str, timestamp: datetime):
-        key = "{}-{}".format(timestamp.strftime("%Y-%m-%d-%H-%M"), asset)
+    def get_asset_price(self, asset: str, timestamp: datetime, scope="GECKO"):
+        if asset.upper() in ["USD", "USDT"]:
+            return 1.0
+
+        key = "{}-{}-{}".format(timestamp.strftime("%Y-%m-%d-%H-%M"), scope, asset)
 
         with self.connection.begin() as conn:
             sql = "SELECT price FROM asset_price_cache WHERE `key` = %s"
@@ -34,10 +36,10 @@ class CurrencyExtractor:
             if result:
                 return result["price"]
             else:
-                try:
-                    price = self.query_binance_asset_price(asset.upper()+"USDT", timestamp)
-                except:
-                    price = self.query_coingecko_asset_price(ASSET_RENAME[asset.upper()] if asset.upper() in ASSET_RENAME.keys() else asset.lower(), timestamp)
+                if scope == "GECKO":
+                    price = self.query_coingecko_asset_price(asset, timestamp)
+                else:
+                    price = self.query_binance_asset_price(asset, timestamp)
 
                 sql = "INSERT INTO asset_price_cache (`key`, price)" \
                       "                       VALUES (%s,  %s   )"
@@ -46,23 +48,24 @@ class CurrencyExtractor:
                 return price
 
     # TODO: coingecko api is limit rated... use binance api instead
-    @retry(stop=stop_after_attempt(20), wait=wait_fixed(5), reraise=True)
+    @retry(stop=stop_after_attempt(10), wait=wait_fixed(2), reraise=True)
     def query_coingecko_asset_price(self, asset: str, timestamp: datetime, fiat: str = "usd"):
-        if asset.upper() in ["EURO", "EUR"]:
-            asset = "tether"
-            fiat = "eur"
+        if asset.upper() in GECKO_CONVERT:
+            asset = GECKO_CONVERT[asset.upper()].lower()
+        logger.debug("Requesting price of {} at {}".format(asset, timestamp))
 
-        logger.debug("Query for price of {} at {}".format(asset, timestamp))
-        cg = CoinGeckoAPI()
-        data = cg.get_coin_history_by_id(asset, timestamp.strftime("%d-%m-%Y %H:%M:%S"), localization='false')
-        price = data["market_data"]["current_price"][fiat]
-        logger.debug("{} is {} at {}".format(asset, price, timestamp))
-        if asset.upper() in ["EURO", "EUR"]:
-            price = 1.0/float(price)
-        return price
+        if asset == "euro":
+            return 1.0/self.query_coingecko_asset_price("tether", timestamp, fiat="eur")
+        else:
+            cg = CoinGeckoAPI()
+            data = cg.get_coin_history_by_id(asset, timestamp.strftime("%d-%m-%Y %H:%M:%S"), localization='false')
+            price = data["market_data"]["current_price"][fiat]
+            logger.debug("{} is {} at {}".format(asset, price, timestamp))
+            return price
 
     def query_binance_asset_price(self, asset: str, timestamp: datetime, delta_minutes=10):
-        logger.debug("Query for price of {} at {}".format(asset, timestamp))
+        asset = asset.upper()+"USDT"
+        logger.debug("Requesting price of {} at {}".format(asset, timestamp))
         start_date = timestamp
         end_date = start_date + datetime.timedelta(minutes=delta_minutes)
 
@@ -73,9 +76,7 @@ class CurrencyExtractor:
         if not klines:
             raise Exception("Unable to guess price from {} at {}".format(asset, timestamp))
 
-        price = (float(klines[0][1])+float(klines[0][2])+float(klines[0][3])+float(klines[0][4]))/4.0
-        logger.debug("{} is {} at {}".format(asset, price, timestamp))
-        return price
+        return float(float(klines[0][1])+float(klines[0][2])+float(klines[0][3])+float(klines[0][4]))/4
 
 
 def boot_db(dialect: str, engine: Connection):

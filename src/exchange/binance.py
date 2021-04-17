@@ -225,14 +225,14 @@ class BinanceTaxExtractor(AbstractExchangeExtractor):
         all_open_positions = self.get_all_fiat_deposit()
 
         for open_position in all_open_positions:
-            euro_price = self.currency_extractor.get_asset_price("EUR", open_position["operation_datetime"])
+            euro_price = self.currency_extractor.get_asset_price("euro", open_position["operation_datetime"])
             purchase_operation = {
                 "purchase_datetime": open_position["operation_datetime"],
                 "asset": open_position["asset"],
                 "amount_asset": open_position["amount"],
-                "amount_price_usd": open_position["amount"]/euro_price,
+                "amount_price_usd": open_position["amount"]/euro_price,  # warn: price is already in euro, get dollar instead
                 "amount_price_euro": open_position["amount"],
-                "current_asset_price_usd": open_position["amount"]/euro_price,
+                "current_asset_price_usd": open_position["amount"]/euro_price,  # warn: price is already in euro, get dollar instead
                 "current_asset_price_euro": open_position["amount"],
             }
 
@@ -243,15 +243,15 @@ class BinanceTaxExtractor(AbstractExchangeExtractor):
         all_close_positions = self.get_all_fiat_withdraw()
 
         for close_position in all_close_positions:
-            euro_price = self.currency_extractor.get_asset_price("EUR", close_position["operation_datetime"])
+            euro_price = self.currency_extractor.get_asset_price("euro", close_position["operation_datetime"])
             amount = abs(close_position["amount"])
             sale_operation = {
                 "sale_datetime": close_position["operation_datetime"],
                 "asset": close_position["asset"],
                 "amount_asset": amount,
-                "amount_price_usd": amount/euro_price,
+                "amount_price_usd": amount/euro_price,  # warn: price is already in euro, get dollar instead
                 "amount_price_euro": amount,
-                "current_asset_price_usd": amount/euro_price,
+                "current_asset_price_usd": amount/euro_price,  # warn: price is already in euro, get dollar instead
                 "current_asset_price_euro": amount,
             }
 
@@ -272,8 +272,8 @@ class BinanceTaxExtractor(AbstractExchangeExtractor):
                 if amount <= 0.0:
                     continue
 
-                price = self.currency_extractor.get_asset_price(asset, timestamp)
-                euro_price = self.currency_extractor.get_asset_price("EUR", timestamp)
+                price = self.currency_extractor.get_asset_price(asset, timestamp, scope="BINANCE")
+                euro_price = self.currency_extractor.get_asset_price("euro", timestamp)
                 portfolio_value += price * amount * euro_price
 
         return portfolio_value

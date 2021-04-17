@@ -59,6 +59,7 @@ Exemple de fontionnement
 
 ### CURRENT DEV (branch: develop):
 
+    * trovuer un meilleur mecanisme de requetage coingecko/binance (en cas de pépin sur le ratelimit de coingecko, juste relancer, le mecanisme de cache fera le taff) 
     * test more with various inputs
     * little refactoring on disposal calculus
     * add "instant 0" / "balance 0" validation (avoid selling asset created ex-nihilo....)
