@@ -7,7 +7,9 @@ from datetime import datetime
 
 from utils import CurrencyExtractor
 
-from exchange.common import SUPPORTED_EXCHANGES, TaxExtractor
+from binance.client import Client
+
+from exchange.common import TaxExtractor
 from reporter import TaxReporter, dump_to_csv
 from utils import boot_db
 from sqlalchemy import create_engine
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--config", type=str, help="yaml config file", required=True)
-    parser.add_argument("--exchange", type=str, help="selected exchange", required="--generate" not in sys.argv, choices=SUPPORTED_EXCHANGES.keys())
+    parser.add_argument("--exchange", type=str, help="selected exchange", required="--generate" not in sys.argv, choices=TaxExtractor.get_supported_exchange().keys())
 
     parser.add_argument("--boot", action="store_true", help="create intial database structure", required=False)
 
@@ -60,7 +62,8 @@ if __name__ == '__main__':
     config = load_configuration(config_file)
 
     engine = create_engine(config["database"]["database_uri"])
-    currency_extractor = CurrencyExtractor(engine)
+    binance_client = Client(config["binance"]["key"], config["binance"]["secret"])
+    currency_extractor = CurrencyExtractor(engine, binance_client)
 
     if execute_boot:
         boot_db(config["database"]["database_dialect"], engine)
@@ -72,9 +75,7 @@ if __name__ == '__main__':
     if execute_load:
         extractor = TaxExtractor.get_extractor(exchange, engine, currency_extractor)
         extractor.load_account_statement(input_filename)
-        extractor.extract_purchase_history()
-        extractor.extract_sale_history()
-        extractor.consolidate_history()
+        extractor.process_load()
         extractor.generate_purchase_operation_history()
         extractor.generate_sale_operation_history(try_compact=try_compact)
 

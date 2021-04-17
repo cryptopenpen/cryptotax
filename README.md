@@ -7,10 +7,32 @@ Generateur de cession d'actif numerique pour la declaration d'impots sur le reve
 note: les calcul intermediaire sont fait en USD mais l'output est en euro
 
 Exchange supporté:
-* Etoro (OK et a priori terminé, juste besoin de plus de gens qui test)
-* Binance (WIP, probleme pour detecter tous les flux in/out, besoin de plus de jeux de donnée/test)
+* Etoro (~OK et a priori terminé, juste besoin de plus de gens qui test)
+* Binance (BETA)
+   * need more test/retour
+   * probleme de somme negative (arrondi ? digit limit d'export binance ?)
+
 * Coinbase (TODO)
 * Crypto.com (TODO)
+
+
+### Particularité:
+* Etoro:
+  * relevé de compte depuis https://accountstat.etoro.com/ (important, il faut TOUT extraire, pas que l'année imposable)
+  * l'exchange étant mixte crypto/action, seul les crypto sont importé
+  * les transfers de crypto sont considéré comme une vente (pas de support donc...)  
+* Binance
+  * relevé complet depuis https://www.binance.com/fr/my/wallet/history/deposit-crypto (important, il faut TOUT extraire, pas que l'année imposable)
+  * seul le compte spot est pris en compte (cela inclue le earning, mais pas le margin, futur etc...)
+  * seul l'EURO est supporté comme cashin/cashout  
+  * les transfert entrant de crypto sont compris comme une augmentation de valeur du portefeuille
+  * les transfert sortant de crypto sont compris comme une diminution de valeur du portefeuille
+
+### Fonctionnement
+
+Etant donnée que binance est utilisé pour connaitre le prix d'un asset, un compte binance est necessaire quelque soit l'exchange chargé !
+
+En cas d'asset inconnu, ajouter une translation dans le dictionnaire ASSET_RENAME ou ajotuer l'entrée a la main dans la table de cache 
 
 arguments:
 * `--config {yaml file}` charge le fichier de configuration (voir config.sample.yaml) 
@@ -24,14 +46,6 @@ arguments:
 * `-o OUTF, --outf OUTF`  fichier de sortie
 * `-b BEGIN, --begin BEGIN` date de debut de l'année d'imposition (format 2020-01-01-00-00-00)
 * `-e END, --end END`  date de fin de l'année d'imposition (format 2020-01-01-00-00-00)
-
-Note sur le relevé de compte
-
-Pour le moment, les transfert entrant sont considéré comme des achats et les transfert sortant sont ignoré en ce qui concerne la vente
-
-* Etoro: relevé de compte depuis https://accountstat.etoro.com/ (important, il faut TOUT extraire, pas que l'année imposable)
-* Binance: relevé complet depuis https://www.binance.com/fr/my/wallet/history/deposit-crypto (important, il faut TOUT extraire, pas que l'année imposable)
-
 
 
 Exemple de fontionnement
@@ -47,9 +61,6 @@ Exemple de fontionnement
 
     * test more with various inputs
     * little refactoring on disposal calculus
-    * switch coingecko to binance for price guessing when binance active
-    * finalize binance implementation
-    * support mixing exchange declaration
     * add "instant 0" / "balance 0" validation (avoid selling asset created ex-nihilo....)
     * add replay/idempotency support
 
@@ -61,13 +72,11 @@ Exemple de fontionnement
 
     * add coinbase implementation
     * add cryptoco implementation
+    * add interexchange transfert support
     * add sqlite support (no need for external db with compose)
         * i don't like it because it makes debug/profiling harder for me
         * but it is easier to handle for not-dev people...
 
-
-### Particularité:
-* Concernant Etoro, l'exchange étant mixte crypto/action, seul les crypto sont importés  
 
 Vous voulez m'aider/remercier/encourager ou vous savez tout simplement pas quoi faire de vos crypto ?
 

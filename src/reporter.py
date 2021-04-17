@@ -6,6 +6,7 @@ from typing import List
 
 from sqlalchemy.engine import Connection
 
+from exchange.common import AbstractExchangeExtractor, TaxExtractor
 from utils import CurrencyExtractor
 
 logger = logging.getLogger("main")
@@ -54,6 +55,7 @@ class TaxReporter:
     def __init__(self, connection: Connection, currency_extractor: CurrencyExtractor):
         self.connection = connection
         self.currency_extractor = currency_extractor
+        self.all_extractor = [cls(self.connection, self.currency_extractor) for cls in TaxExtractor.get_supported_exchange().values()]
 
     def get_sale_operations(self, begin_date: datetime, end_date: datetime):
         with self.connection.connect() as conn:
@@ -63,57 +65,11 @@ class TaxReporter:
             result = conn.execute(sql, args).mappings().all()
             return result
 
-    def get_purchased_assets(self, timestamp: datetime, inclusive: bool = False):
-        with self.connection.connect() as conn:
-            op = "<=" if inclusive else "<"
-            sql = "SELECT * FROM purchase_operation_history WHERE  purchase_datetime {} %s".format(op)
-            args = [timestamp]
-
-            result = conn.execute(sql, args).mappings().all()
-
-            return result
-
-    def get_sold_assets(self, timestamp: datetime, inclusive: bool = False):
-        with self.connection.connect() as conn:
-            op = "<=" if inclusive else "<"
-            sql = "SELECT * FROM sale_operation_history WHERE  sale_datetime {} %s".format(op)
-            args = [timestamp]
-
-            result = conn.execute(sql, args).mappings().all()
-
-            return result
-
-    def get_owned_assets(self, timestamp: datetime):
-        purchased_asset = self.get_purchased_assets(timestamp, inclusive=True)
-        sold_asset = self.get_sold_assets(timestamp, inclusive=False)
-
-        owned_asset = {}
-
-        for asset in purchased_asset:
-            asset_name = asset["asset"]
-            if asset_name in owned_asset.keys():
-                owned_asset[asset_name] += asset["amount_asset"]
-            else:
-                owned_asset[asset_name] = asset["amount_asset"]
-
-        for asset in sold_asset:
-            asset_name = asset["asset"]
-            if asset_name in owned_asset.keys():
-                owned_asset[asset_name] -= asset["amount_asset"]
-            else:
-                raise Exception("Asset sold with negative balance")
-
-        return owned_asset
-
     def get_portfolio_value(self, timestamp: datetime):
-        assets = self.get_owned_assets(timestamp)
+        portfolio_value = 0.0
 
-        portfolio_value = 0
-
-        for asset, amount in assets.items():
-            price = self.currency_extractor.get_asset_price(asset, timestamp)
-            euro_price = self.currency_extractor.get_asset_price("euro", timestamp)
-            portfolio_value += price * amount * euro_price
+        for extractor in self.all_extractor:
+            portfolio_value += extractor.get_portfolio_value(timestamp)
 
         return portfolio_value
 
@@ -127,6 +83,7 @@ class TaxReporter:
             return result["SUM(amount_price_euro)"]
 
     def generate_tax_disposal_history(self, begin_date: datetime, end_date: datetime, compacted: bool = False):
+        logger.info("Generate tax disposal history")
         sale_operations = self.get_sale_operations(begin_date, end_date)
 
         all_disposals = []

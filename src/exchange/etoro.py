@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime
-from typing import List
 
 from openpyxl import load_workbook
 from sqlalchemy.engine import Connection
 
+from exchange.common import AbstractExchangeExtractor
 from utils import CurrencyExtractor
 
 CRYPTO_PAIR = {
@@ -34,13 +34,12 @@ FIELD_NAME_ACTION = 1
 logger = logging.getLogger("main")
 
 
-class EtoroTaxExtractor:
+class EtoroTaxExtractor(AbstractExchangeExtractor):
 
     PLATFORM = "ETORO"
 
     def __init__(self, connection: Connection, currency_extractor: CurrencyExtractor):
-        self.connection = connection
-        self.currency_extractor = currency_extractor
+        super(EtoroTaxExtractor, self).__init__(connection, currency_extractor)
         self.all_position_operations = None
         self.closed_positions = None
 
@@ -54,17 +53,19 @@ class EtoroTaxExtractor:
         self.all_position_operations = transactions_report
         self.closed_positions = closed_positions
 
+    def process_load(self):
+        self.extract_purchase_history()
+        self.extract_sale_history()
+        self.consolidate_history()
+
     def clean_all_history(self):
-        logger.info("Extract all etoro history")
+        super(EtoroTaxExtractor, self).clean_all_history()
+
         with self.connection.begin() as conn:
             sql = "DELETE FROM `etoro_open_positions`;"
             conn.execute(sql, [])
             sql = "DELETE FROM `etoro_close_positions`;"
             conn.execute(sql, [])
-            sql = "DELETE FROM `purchase_operation_history` WHERE EXCHANGE = %s;"
-            conn.execute(sql, [self.PLATFORM])
-            sql = "DELETE FROM `sale_operation_history` WHERE EXCHANGE = %s;"
-            conn.execute(sql, [self.PLATFORM])
 
     def extract_purchase_history(self):
         logger.info("Extract etoro purchase history")
@@ -189,38 +190,12 @@ class EtoroTaxExtractor:
 
             self.save_open_position(position)
 
-    def save_purchase_operation(self, purchase_operation):
-        with self.connection.begin() as conn:
-            sql = "INSERT INTO purchase_operation_history (purchase_datetime, asset, amount_asset, amount_price_usd, amount_price_euro, current_asset_price_usd, current_asset_price_euro, exchange)" \
-                        "                          VALUES (%s,                %s,    %s,           %s,               %s,                %s,                      %s,                       %s      )"
-            conn.execute(sql, [purchase_operation["purchase_datetime"],
-                               purchase_operation["asset"],
-                               purchase_operation["amount_asset"],
-                               purchase_operation["amount_price_usd"],
-                               purchase_operation["amount_price_euro"],
-                               purchase_operation["current_asset_price_usd"],
-                               purchase_operation["current_asset_price_euro"],
-                               self.PLATFORM])
-
-    def save_sale_operation(self, sale_operation):
-        with self.connection.begin() as conn:
-            sql = "INSERT INTO sale_operation_history (sale_datetime, asset, amount_asset, amount_price_usd, amount_price_euro, current_asset_price_usd, current_asset_price_euro, exchange)" \
-                  "                            VALUES (%s,            %s,    %s,           %s,               %s,                %s,                      %s,                       %s      )"
-            conn.execute(sql, [sale_operation["sale_datetime"],
-                               sale_operation["asset"],
-                               sale_operation["amount_asset"],
-                               sale_operation["amount_price_usd"],
-                               sale_operation["amount_price_euro"],
-                               sale_operation["current_asset_price_usd"],
-                               sale_operation["current_asset_price_euro"],
-                               self.PLATFORM])
-
     def generate_purchase_operation_history(self):
         logger.info("Generate etoro purchase operation history")
         all_open_positions = self.get_all_open_positions()
 
         for open_position in all_open_positions:
-            euro_price = self.currency_extractor.get_asset_price("euro", open_position["open_datetime"])
+            euro_price = self.currency_extractor.get_asset_price("EUR", open_position["open_datetime"])
             purchase_operation = {
                 "purchase_datetime": open_position["open_datetime"],
                 "asset": open_position["asset"],
@@ -232,7 +207,6 @@ class EtoroTaxExtractor:
             }
 
             self.save_purchase_operation(purchase_operation)
-
 
     def generate_sale_operation_history(self, try_compact: bool = False):
         logger.info("Generate etoro sale operation history (compact is {})".format(try_compact))
@@ -256,13 +230,13 @@ class EtoroTaxExtractor:
                     }
 
             for op in compacted_sale_op.values():
-                euro_price = self.currency_extractor.get_asset_price("euro", op["sale_datetime"])
+                euro_price = self.currency_extractor.get_asset_price("EUR", op["sale_datetime"])
                 op["amount_price_euro"] = op["amount_price_usd"]*euro_price
                 op["current_asset_price_euro"] = op["current_asset_price_usd"]*euro_price
                 self.save_sale_operation(op)
         else:
             for close_position in all_close_positions:
-                euro_price = self.currency_extractor.get_asset_price("euro", close_position["sale_datetime"])
+                euro_price = self.currency_extractor.get_asset_price("EUR", close_position["close_datetime"])
 
                 sale_operation = {
                     "sale_datetime": close_position["close_datetime"],
@@ -275,3 +249,57 @@ class EtoroTaxExtractor:
                 }
 
                 self.save_sale_operation(sale_operation)
+
+    def get_purchased_assets(self, timestamp: datetime, inclusive: bool = False):
+        with self.connection.connect() as conn:
+            op = "<=" if inclusive else "<"
+            sql = "SELECT * FROM purchase_operation_history WHERE  purchase_datetime {} %s".format(op)
+            args = [timestamp]
+
+            result = conn.execute(sql, args).mappings().all()
+
+            return result
+
+    def get_sold_assets(self, timestamp: datetime, inclusive: bool = False):
+        with self.connection.connect() as conn:
+            op = "<=" if inclusive else "<"
+            sql = "SELECT * FROM sale_operation_history WHERE  sale_datetime {} %s".format(op)
+            args = [timestamp]
+
+            result = conn.execute(sql, args).mappings().all()
+
+            return result
+
+    def get_owned_assets(self, timestamp: datetime):
+        purchased_asset = self.get_purchased_assets(timestamp, inclusive=True)
+        sold_asset = self.get_sold_assets(timestamp, inclusive=False)
+
+        owned_asset = {}
+
+        for asset in purchased_asset:
+            asset_name = asset["asset"]
+            if asset_name in owned_asset.keys():
+                owned_asset[asset_name] += asset["amount_asset"]
+            else:
+                owned_asset[asset_name] = asset["amount_asset"]
+
+        for asset in sold_asset:
+            asset_name = asset["asset"]
+            if asset_name in owned_asset.keys():
+                owned_asset[asset_name] -= asset["amount_asset"]
+            else:
+                raise Exception("Asset sold with negative balance")
+
+        return owned_asset
+
+    def get_portfolio_value(self, timestamp: datetime):
+        assets = self.get_owned_assets(timestamp)
+
+        portfolio_value = 0
+
+        for asset, amount in assets.items():
+            price = self.currency_extractor.get_asset_price(asset, timestamp)
+            euro_price = self.currency_extractor.get_asset_price("EUR", timestamp)
+            portfolio_value += price * amount * euro_price
+
+        return portfolio_value
