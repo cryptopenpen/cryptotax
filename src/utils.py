@@ -61,7 +61,7 @@ class CurrencyExtractor:
             data = cg.get_coin_history_by_id(asset, timestamp.strftime("%d-%m-%Y %H:%M:%S"), localization='false')
             price = data["market_data"]["current_price"][fiat]
             logger.debug("{} is {} at {}".format(asset, price, timestamp))
-            return price
+            return float(price)
 
     def query_binance_asset_price(self, asset: str, timestamp: datetime, delta_minutes=10):
         asset = asset.upper()+"USDT"

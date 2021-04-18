@@ -5,6 +5,7 @@
 Generateur de cession d'actif numerique pour la declaration d'impots sur le revenue français (CERFA 2086) sur différents exchange
 
 note: les calcul intermediaire sont fait en USD mais l'output est en euro
+note: j'ai l'habitude de dev en anglais, donc franglais partout, sorry.....
 
 Exchange supporté:
 * Etoro (~OK et a priori terminé, juste besoin de plus de gens qui test)
@@ -70,7 +71,9 @@ Exemple de fontionnement
     * no support for interexchange/wallet movement (ex: buy on coinbase, send to binance then sell)  
 
 ### NEXT: 
-
+  
+    * add REST interface
+    * add frontend (may be something in reactjs)
     * add coinbase implementation
     * add cryptoco implementation
     * add interexchange transfert support
