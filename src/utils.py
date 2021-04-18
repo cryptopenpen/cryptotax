@@ -55,7 +55,7 @@ class CurrencyExtractor:
         logger.debug("Requesting price of {} at {}".format(asset, timestamp))
 
         if asset == "euro":
-            return 1.0/self.query_coingecko_asset_price("tether", timestamp, fiat="eur")
+            return self.query_coingecko_asset_price("tether", timestamp, fiat="eur")
         else:
             cg = CoinGeckoAPI()
             data = cg.get_coin_history_by_id(asset, timestamp.strftime("%d-%m-%Y %H:%M:%S"), localization='false')

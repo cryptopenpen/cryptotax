@@ -1,6 +1,7 @@
 # cryptotax
 
 ## WARNING: WORK IN PROGRESS, need test, test, test and re-test
+## WARNING: à utiliser a vos risques et périls, je ne garanti rien
 
 Generateur de cession d'actif numerique pour la declaration d'impots sur le revenue français (CERFA 2086) sur différents exchange
 
@@ -72,8 +73,8 @@ Exemple de fontionnement
 
 ### NEXT: 
   
-    * add REST interface
-    * add frontend (may be something in reactjs)
+    * add REST interface for api call
+    * add frontend (may be something in reactjs mais je suis pas super competant en js....)
     * add coinbase implementation
     * add cryptoco implementation
     * add interexchange transfert support
