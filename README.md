@@ -12,8 +12,6 @@ Exchange supporté:
 * Etoro (~OK et a priori terminé, juste besoin de plus de gens qui test)
 * Binance (BETA)
    * need more test/retour
-   * probleme de somme negative (arrondi ? digit limit d'export binance ?)
-
 * Coinbase (TODO)
 * Crypto.com (TODO)
 
@@ -73,11 +71,11 @@ Exemple de fontionnement
 
 ### NEXT: 
   
-    * add REST interface for api call
-    * add frontend (may be something in reactjs mais je suis pas super competant en js....)
     * add coinbase implementation
     * add cryptoco implementation
     * add interexchange transfert support
+    * add REST interface for api call
+    * add frontend (surement du reactjs mais je suis pas super competant en js donc ca prendra n certain temps....)
     * add sqlite support (no need for external db with compose)
         * i don't like it because it makes debug/profiling harder for me
         * but it is easier to handle for not-dev people...
