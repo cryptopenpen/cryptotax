@@ -13,8 +13,7 @@ Exchange supporté:
 * Binance (BETA)
    * need more test/retour
    * probleme de somme negative (arrondi ? digit limit d'export binance ?)
-
-* Coinbase (TODO)
+* Coinbase (IN PROGRESS)
 * Crypto.com (TODO)
 
 
@@ -29,6 +28,8 @@ Exchange supporté:
   * seul l'EURO est supporté comme cashin/cashout  
   * les transfert entrant de crypto sont compris comme une augmentation de valeur du portefeuille
   * les transfert sortant de crypto sont compris comme une diminution de valeur du portefeuille
+* Coinbase
+  * en cours de dev....
 
 ### Fonctionnement
 
@@ -60,7 +61,7 @@ Exemple de fontionnement
 
 
 ### CURRENT DEV (branch: develop):
-
+    * add coinbase implementation
     * trovuer un meilleur mecanisme de requetage coingecko/binance (en cas de pépin sur le ratelimit de coingecko, juste relancer, le mecanisme de cache fera le taff) 
     * test more with various inputs
     * little refactoring on disposal calculus
@@ -75,7 +76,6 @@ Exemple de fontionnement
   
     * add REST interface for api call
     * add frontend (may be something in reactjs mais je suis pas super competant en js....)
-    * add coinbase implementation
     * add cryptoco implementation
     * add interexchange transfert support
     * add sqlite support (no need for external db with compose)
@@ -85,7 +85,10 @@ Exemple de fontionnement
 
 Vous voulez m'aider/remercier/encourager ou vous savez tout simplement pas quoi faire de vos crypto ?
 
-Voici mes adresses de wallet public ;) :
+Deja, vous pouvez contribuer au code....
+Genre le frontend, ca serait cool parce que je sens que je vais galerer, auquel cas je vais prioriser l'api REST
+
+et si vous êtes pas developpeur, voici mes adresses de wallet public ;) :
 
 * bitcoin: `1DqSdywm8j2Q4WCya3TmWMGWMK2To1R3RF`
 * ethereum: `0xc76955475cb6b839ac45460f05812bec40266dd7`
