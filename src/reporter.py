@@ -77,10 +77,9 @@ class TaxReporter:
         with self.connection.connect() as conn:
             sql = "SELECT SUM(amount_price_euro) FROM purchase_operation_history WHERE purchase_datetime <= %s"
             args = [timestamp]
-
             result = conn.execute(sql, args).mappings().fetchone()
 
-            return result["SUM(amount_price_euro)"]
+            return result["SUM(amount_price_euro)"] if result["SUM(amount_price_euro)"] else 0.0
 
     def generate_tax_disposal_history(self, begin_date: datetime, end_date: datetime, compacted: bool = False):
         logger.info("Generate tax disposal history")

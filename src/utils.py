@@ -11,15 +11,28 @@ from database import BOOT_DB_REQUEST
 
 logger = logging.getLogger("main")
 
-GECKO_CONVERT = {"BNB": "binancecoin",
-                 "EUR": "euro"}
-
-
 class CurrencyExtractor:
 
     def __init__(self, connection: Connection, binance_client: Client):
         self.connection = connection
         self.binance_client = binance_client
+        self.local_gecko_cache = {}
+
+    def get_gecko_token_name(self, token_name):
+        if token_name in self.local_gecko_cache.keys():
+            return self.local_gecko_cache[token_name]
+
+        with self.connection.begin() as conn:
+            sql = "SELECT * FROM asset_gecko_convert WHERE token_name like %s"
+            args = [token_name]
+
+            result = conn.execute(sql, args).mappings().fetchone()
+
+            if result:
+                self.local_gecko_cache[token_name] = result["gecko_name"]
+                return self.local_gecko_cache[token_name]
+
+        return token_name
 
     def get_asset_price(self, asset: str, timestamp: datetime, scope="GECKO"):
         if asset.upper() in ["USD", "USDT"]:
@@ -38,7 +51,7 @@ class CurrencyExtractor:
             else:
                 if scope == "GECKO":
                     price = self.query_coingecko_asset_price(asset, timestamp)
-                else:
+                elif scope == "BINANCE":
                     price = self.query_binance_asset_price(asset, timestamp)
 
                 sql = "INSERT INTO asset_price_cache (`key`, price)" \
@@ -50,8 +63,7 @@ class CurrencyExtractor:
     # TODO: coingecko api is limit rated... use binance api instead
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(2), reraise=True)
     def query_coingecko_asset_price(self, asset: str, timestamp: datetime, fiat: str = "usd"):
-        if asset.upper() in GECKO_CONVERT:
-            asset = GECKO_CONVERT[asset.upper()].lower()
+        asset = self.get_gecko_token_name(asset)
         logger.debug("Requesting price of {} at {}".format(asset, timestamp))
 
         if asset == "euro":

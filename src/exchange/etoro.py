@@ -253,8 +253,8 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
     def get_purchased_assets(self, timestamp: datetime, inclusive: bool = False):
         with self.connection.connect() as conn:
             op = "<=" if inclusive else "<"
-            sql = "SELECT * FROM purchase_operation_history WHERE  purchase_datetime {} %s".format(op)
-            args = [timestamp]
+            sql = "SELECT * FROM purchase_operation_history WHERE  purchase_datetime {} %s AND exchange = %s".format(op)
+            args = [timestamp, self.PLATFORM]
 
             result = conn.execute(sql, args).mappings().all()
 
@@ -263,8 +263,8 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
     def get_sold_assets(self, timestamp: datetime, inclusive: bool = False):
         with self.connection.connect() as conn:
             op = "<=" if inclusive else "<"
-            sql = "SELECT * FROM sale_operation_history WHERE  sale_datetime {} %s".format(op)
-            args = [timestamp]
+            sql = "SELECT * FROM sale_operation_history WHERE  sale_datetime {} %s AND exchange = %s".format(op)
+            args = [timestamp, self.PLATFORM]
 
             result = conn.execute(sql, args).mappings().all()
 

@@ -14,9 +14,11 @@ class TaxExtractor:
     def get_supported_exchange():
         from exchange.binance import BinanceTaxExtractor
         from exchange.etoro import EtoroTaxExtractor
+        from exchange.coinbase import CoinbaseTaxExtractor
 
         return {"ETORO": EtoroTaxExtractor,
-                "BINANCE": BinanceTaxExtractor}
+                "BINANCE": BinanceTaxExtractor,
+                "COINBASE": CoinbaseTaxExtractor}
 
     @staticmethod
     def get_extractor(exchange: str, engine: Connection, currency_extractor: CurrencyExtractor):

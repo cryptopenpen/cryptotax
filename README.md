@@ -13,11 +13,27 @@ Exchange supporté:
 * Binance (BETA)
    * need more test/retour
    * probleme de somme negative (arrondi ? digit limit d'export binance ?)
-* Coinbase (IN PROGRESS)
+* Coinbase (BETA)
+   * need more test/retour
 * Crypto.com (TODO)
 
 
 ### Particularité:
+* Conversion de token name
+  * un token peut avoir un id different de son nom dans coingecko, utiliser la table `asset_gecko_convert` pour ajouter des translations
+  * exemple:
+
+###    
+    INSERT INTO `asset_gecko_convert` (`token_name`, `gecko_name`) VALUES
+    ('band', 'band-protocol'),
+    ('bnb', 'binancecoin'),
+    ('cgld', 'celo'),
+    ('comp', 'compound-coin'),
+    ('eur',	'euro'),
+    ('fil',	'filecoin'),
+    ('grt',	'the-graph'),
+    ('mkr',	'maker');``
+
 * Etoro:
   * relevé de compte depuis https://accountstat.etoro.com/ (important, il faut TOUT extraire, pas que l'année imposable)
   * l'exchange étant mixte crypto/action, seul les crypto sont importé
@@ -29,7 +45,10 @@ Exchange supporté:
   * les transfert entrant de crypto sont compris comme une augmentation de valeur du portefeuille
   * les transfert sortant de crypto sont compris comme une diminution de valeur du portefeuille
 * Coinbase
-  * en cours de dev....
+  * relevé complet depuis https://www.coinbase.com/reports
+  * seul l'EURO est supporté comme cashin/cashout
+  * les transfert entrant de crypto sont compris comme une augmentation de valeur du portefeuille
+  * les transfert sortant de crypto sont compris comme une diminution de valeur du portefeuille
 
 ### Fonctionnement
 
@@ -61,7 +80,6 @@ Exemple de fontionnement
 
 
 ### CURRENT DEV (branch: develop):
-    * add coinbase implementation
     * trovuer un meilleur mecanisme de requetage coingecko/binance (en cas de pépin sur le ratelimit de coingecko, juste relancer, le mecanisme de cache fera le taff) 
     * test more with various inputs
     * little refactoring on disposal calculus
