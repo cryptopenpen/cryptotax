@@ -54,8 +54,6 @@ Exchange supporté:
 
 Etant donnée que binance est utilisé pour connaitre le prix d'un asset, un compte binance est necessaire quelque soit l'exchange chargé !
 
-En cas d'asset inconnu, ajouter une translation dans le dictionnaire ASSET_RENAME ou ajotuer l'entrée a la main dans la table de cache 
-
 arguments:
 * `--config {yaml file}` charge le fichier de configuration (voir config.sample.yaml) 
 * `--boot`                (re)créé la structure de BDD necessaire
