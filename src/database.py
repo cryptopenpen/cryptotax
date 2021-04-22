@@ -6,6 +6,12 @@ CREATE TABLE IF NOT EXISTS `asset_price_cache` (
   UNIQUE KEY `key` (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
+CREATE TABLE IF NOT EXISTS `asset_gecko_convert` (
+  `token_name` varchar(256) NOT NULL,
+  `gecko_name` varchar(256) NOT NULL,
+  UNIQUE KEY `token_name` (`token_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+""","""
 DROP TABLE IF EXISTS `binance_crypto_history`;
 CREATE TABLE `binance_crypto_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

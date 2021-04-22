@@ -81,6 +81,7 @@ Exemple de fontionnement
     * trovuer un meilleur mecanisme de requetage coingecko/binance (en cas de pépin sur le ratelimit de coingecko, juste relancer, le mecanisme de cache fera le taff) 
     * test more with various inputs
     * little refactoring on disposal calculus
+    * little refactoring on class workflow (plus de generic et d'abstrait pour faciliter l'ajout d'exchange)
     * add "instant 0" / "balance 0" validation (avoid selling asset created ex-nihilo....)
     * add replay/idempotency support
 
@@ -94,6 +95,7 @@ Exemple de fontionnement
     * add interexchange transfert support
     * add REST interface for api call
     * add frontend (surement du reactjs mais je suis pas super competant en js donc ca prendra n certain temps....)
+    * bundle code into docker (eviter d'avoir un venv python local)
     * add sqlite support (no need for external db with compose)
         * i don't like it because it makes debug/profiling harder for me
         * but it is easier to handle for not-dev people...
@@ -102,7 +104,8 @@ Exemple de fontionnement
 Vous voulez m'aider/remercier/encourager ou vous savez tout simplement pas quoi faire de vos crypto ?
 
 Deja, vous pouvez contribuer au code....
-Genre le frontend, ca serait cool parce que je sens que je vais galerer, auquel cas je vais prioriser l'api REST
+Genre le frontend, ca serait cool parce que je sens que je vais galerer
+Je vais prioriserai l'api REST en consequence
 
 et si vous êtes pas developpeur, voici mes adresses de wallet public ;) :
 
