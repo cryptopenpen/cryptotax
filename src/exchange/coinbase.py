@@ -216,8 +216,8 @@ class CoinbaseTaxExtractor(AbstractExchangeExtractor):
     def get_portfolio_value(self, timestamp: datetime):
         portfolio_value = 0.0
         with self.connection.connect() as conn:
-            sql = "select sum(amount_asset) as amount, asset from coinbase_crypto_history where operation_datetime < %s and exchange = %s group by asset"
-            args = [timestamp, self.PLATFORM]
+            sql = "select sum(amount_asset) as amount, asset from coinbase_crypto_history where operation_datetime <= %s group by asset"
+            args = [timestamp]
 
             result = conn.execute(sql, args).mappings().all()
 

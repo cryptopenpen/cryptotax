@@ -70,7 +70,6 @@ class TaxReporter:
 
         for extractor in self.all_extractor:
             portfolio_value += extractor.get_portfolio_value(timestamp)
-
         return portfolio_value
 
     def get_all_purchase_value(self, timestamp: datetime):

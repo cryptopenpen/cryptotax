@@ -128,6 +128,25 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
                                    position["profit_price"],
                                    position["open_asset_price"]])
 
+                open_pos = self.get_open_position(position["position_id"])
+                if not open_pos:
+                    open_position = {
+                        "position_id": position["position_id"],
+                        "open_datetime": datetime.strptime(row[10].internal_value, "%d/%m/%Y %H:%M"),
+                        "asset": CRYPTO_PAIR[row[FIELD_NAME_ACTION].internal_value[4:].upper()],
+                        "amount_asset": position["amount_asset"],
+                        "amount_price": position["amount_price"],
+                        "current_asset_price": position["open_asset_price"]
+                    }
+
+                    sql2 = "INSERT INTO etoro_open_positions (position_id, open_datetime, asset, amount_price)" \
+                          "                          VALUES (%s,          %s,            %s,    %s          )"
+                    conn.execute(sql2, [open_position["position_id"],
+                                        open_position["open_datetime"],
+                                        open_position["asset"],
+                                        open_position["amount_price"]])
+                    print("correct missing open position: {}".format(open_position))
+
     def get_all_open_positions(self):
         with self.connection.connect() as conn:
             sql = "SELECT * FROM etoro_open_positions"
@@ -142,6 +161,15 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
             args = []
 
             result = conn.execute(sql, args).mappings().all()
+
+            return result
+
+    def get_open_position(self, position_id: str):
+        with self.connection.connect() as conn:
+            sql = "SELECT * FROM etoro_open_positions WHERE position_id = %s"
+            args = [position_id]
+
+            result = conn.execute(sql, args).mappings().fetchone()
 
             return result
 
@@ -287,6 +315,8 @@ class EtoroTaxExtractor(AbstractExchangeExtractor):
             asset_name = asset["asset"]
             if asset_name in owned_asset.keys():
                 owned_asset[asset_name] -= asset["amount_asset"]
+                if owned_asset[asset_name] < 0:
+                    raise Exception("Asset sold with negative balance")
             else:
                 raise Exception("Asset sold with negative balance")
 
