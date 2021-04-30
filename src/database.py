@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `asset_gecko_convert` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `binance_crypto_history`;
+""","""
 CREATE TABLE `binance_crypto_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `operation_datetime` datetime NOT NULL,
@@ -23,6 +24,7 @@ CREATE TABLE `binance_crypto_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `binance_fiat_history`;
+""","""
 CREATE TABLE `binance_fiat_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `operation_datetime` datetime NOT NULL,
@@ -33,6 +35,7 @@ CREATE TABLE `binance_fiat_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `binance_raw_operations`;
+""","""
 CREATE TABLE `binance_raw_operations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `operation_datetime` datetime NOT NULL,
@@ -46,6 +49,7 @@ CREATE TABLE `binance_raw_operations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `coinbase_raw_operations`;
+""","""
 CREATE TABLE `coinbase_raw_operations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `operation_datetime` datetime NOT NULL,
@@ -59,6 +63,7 @@ CREATE TABLE `coinbase_raw_operations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `etoro_close_positions`;
+""","""
 CREATE TABLE `etoro_close_positions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `position_id` varchar(256) NOT NULL,
@@ -73,6 +78,7 @@ CREATE TABLE `etoro_close_positions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `etoro_open_positions`;
+""","""
 CREATE TABLE `etoro_open_positions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `position_id` varchar(256) NOT NULL,
@@ -86,6 +92,7 @@ CREATE TABLE `etoro_open_positions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `purchase_operation_history`;
+""","""
 CREATE TABLE `purchase_operation_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `purchase_datetime` datetime NOT NULL,
@@ -100,6 +107,7 @@ CREATE TABLE `purchase_operation_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `sale_operation_history`;
+""","""
 CREATE TABLE `sale_operation_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `sale_datetime` datetime NOT NULL,
@@ -114,6 +122,7 @@ CREATE TABLE `sale_operation_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `tax_disposal_history`;
+""","""
 CREATE TABLE `tax_disposal_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `disposal_datetime` datetime NOT NULL,
@@ -128,6 +137,7 @@ CREATE TABLE `tax_disposal_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ""","""
 DROP TABLE IF EXISTS `tax_report`;
+""","""
 CREATE TABLE `tax_report` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `creation_date` datetime NOT NULL,

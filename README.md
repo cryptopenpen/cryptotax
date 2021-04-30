@@ -67,8 +67,8 @@ arguments:
 * `-b BEGIN, --begin BEGIN` date de debut de l'année d'imposition (format 2020-01-01-00-00-00)
 * `-e END, --end END`  date de fin de l'année d'imposition (format 2020-01-01-00-00-00)
 
-
-Exemple de fontionnement
+# Exemple de fontionnement
+(c'est ça que vous cherchez le plus souvent)
 * créer un virtualenv (python 3.6+) et installer les requirements
 * lancer le docker compose fourni (attention au port, modifier le config.yaml en consequence)
 * `python src/main.py --config config.yaml --boot`

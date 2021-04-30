@@ -29,7 +29,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--config", type=str, help="yaml config file", required=True)
-    parser.add_argument("--exchange", type=str, help="selected exchange", required="--generate" not in sys.argv, choices=TaxExtractor.get_supported_exchange().keys())
+    parser.add_argument("--exchange", type=str, help="selected exchange", required=not ("--generate" not in sys.argv or "--boot" not in sys.argv), choices=TaxExtractor.get_supported_exchange().keys())
 
     parser.add_argument("--boot", action="store_true", help="create intial database structure", required=False)
 
