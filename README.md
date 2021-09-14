@@ -109,10 +109,6 @@ Je vais prioriserai l'api REST en consequence
 
 et si vous êtes pas developpeur, voici mes adresses de wallet public ;) :
 
-* bitcoin: `1DqSdywm8j2Q4WCya3TmWMGWMK2To1R3RF`
-* ethereum: `0xc76955475cb6b839ac45460f05812bec40266dd7`
-* binance coin (BEP2): `bnb136ns6lfw4zs5hg4n85vdthaad7hq5m4gtkgf23` memo: `108102908`
-* xrp: `rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh` tag: `106481737`
-* maiar: `@penpen`
-* egld: `erd1a2vpl2kawxdlm6sumymtglsp98vgawm5uphksvkjvrtc2uuu0uss2nyc7t`
+* eth/bsc/polygon/avalanche/erc-20 like: `0x5D333Cc10816A8764e8E40979dE3E03C293F3cAb`
+
 
