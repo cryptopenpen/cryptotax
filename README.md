@@ -109,6 +109,6 @@ Je vais prioriserai l'api REST en consequence
 
 et si vous êtes pas developpeur, voici mes adresses de wallet public ;) :
 
-* eth/bsc/polygon/avalanche/erc-20 like: `0x5D333Cc10816A8764e8E40979dE3E03C293F3cAb`
+* eth/bsc/polygon/avalanche/erc-20 like: `0x0402f94BC9A7e2ef2Cb01be155Ea111C7070607e`
 
 
